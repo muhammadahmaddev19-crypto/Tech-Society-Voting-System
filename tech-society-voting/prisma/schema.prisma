@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String      @id @default(cuid())
+  name        String
+  teamName    String
+  description String
+  imageUrl    String
+  department  String?
+  semester    String?
+  section     String?
+  status      ProjectStatus @default(APPROVED)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  members     Member[]
+  votes       Vote[]
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+model Member {
+  id        String  @id @default(cuid())
+  name      String
+  rollNo    String
+  semester  String
+  section   String
+  department String
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Voter {
+  id         String   @id @default(cuid())
+  name       String
+  semester   String
+  department String
+  section    String
+  rollNo     String   @unique
+  createdAt  DateTime @default(now())
+  vote       Vote?
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  voterId   String   @unique
+  projectId String
+  createdAt DateTime @default(now())
+  voter     Voter    @relation(fields: [voterId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([createdAt])
+}
+
+enum ProjectStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
